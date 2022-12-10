@@ -10,19 +10,26 @@ public class Main {
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        System.out.println("#####Seja Bem-Vindo ao Super Bingo!#####\n");
+        System.out.println("----------------------------------------");
+        System.out.println("---- Seja Bem-Vindo ao Super Bingo! ----\n");
+        System.out.println("----------------------------------------");
         System.out.println("Vamos cadastrar os jogadores dessa partida...\n");
+        System.out.println("----------------------------------------");
         System.out.println("Entre com o nome dos jogadores separados por hífen e sem espaços. Exemplo: player1-player2-player3");
 
         String nomes = scanner.next();
         String[] nomesJogadores = nomes.split("-");
 
         int[][] cartelas = new int[nomesJogadores.length][tamanhoCartela];
+        int[][] marcadas = new int[nomesJogadores.length][tamanhoCartela];
+        int qntRodadas = 0;
         int [] sorteados = new int [60];
-        for (int i = 0; i > 60; i++) {
+
+        for (int i = 0; i < 60; i++) {
             sorteados[i] = 0;
         }
 
+        System.out.println("----------------------------------------");
         System.out.println("Selecione o modo de geração das cartelas.");
         manualOuAutomatico();
         int opGeracaoCartela = scanner.nextInt();
@@ -33,59 +40,78 @@ public class Main {
             default -> System.out.println("Opção inválida :( Tente novamente");
         }
 
-        System.out.println("Os Jogadores e as cartelas são:");
+        System.out.println("----------------------------------------");
+        System.out.println("Os Jogadores e as cartelas são:\n");
         mostrarJogadoresECartelas(nomesJogadores, cartelas);
 
+        System.out.println("----------------------------------------");
         System.out.println("Selecione o modo de geração dos sorteios.");
         manualOuAutomatico();
         int opGeracaoSorteio = scanner.nextInt();
 
-        switch (opGeracaoSorteio){
-            case 1:
-                sorteioManual(sorteados);
-                //TODO marcar cartela
-                //TODO consultar se alguem fez bingo
-                break;
-            case 2:
-                sorteioAutomatico(sorteados);
-                sorteioAutomatico(sorteados);
-
-
-                //TODO implementar geração automatica do sorteio, consultar numeros iguais
-                //TODO marcar cartela
-                //TODO consultar se alguem fez bingo
-                break;
-            default:
-                System.out.println("Opção inválida :( Tente novamente");
+        switch (opGeracaoSorteio) {
+            case 1 -> sorteioManual(sorteados, nomesJogadores, cartelas, marcadas, qntRodadas);
+            case 2 -> sorteioAutomatico(sorteados, nomesJogadores, cartelas, marcadas, qntRodadas);
+            default -> System.out.println("Opção inválida :( Tente novamente");
         }
     }
 
-    private static void sorteioAutomatico(int[] sorteados) {
-        int[] sorteio = new int[qntSorteados];
+    private static void fezBingo(int [][] marcadas, String[] nomesJogadores, int [] sorteados, int [][] cartelas, int qntRodadas) {
+        for (int i = 0; i < nomesJogadores.length; i++ ) {
+            int[] qntMarcados = new int[nomesJogadores.length];
+            qntMarcados[i] = 0;
+            for (int j = 0; j < marcadas[i].length; j++) {
+                if (marcadas[i][j] == 1) {
+                    qntMarcados[i] += 1;
+                }
+            }
+            if (qntMarcados[i] == 5) {
+                System.out.println("----------------------------------------");
+                System.out.printf("Parabens %s! Você fez Bingo.\n", nomesJogadores[i]);
+                System.out.println("----------------------------------------");
+                System.out.println("-----------Estatísticas gerais----------");
+                System.out.printf("Foram %d rodadas.\n", qntRodadas);
+                Arrays.sort(cartelas[i]);
+                System.out.println("A cartela premiado foi: " + Arrays.toString(cartelas[i]));
+                todosOsSorteados(sorteados);
+                //TODO fazer ranking geral ordenado por número de acertos
+                break;
+            } else {
+                System.out.printf("O Jogador %s está com %d acertos.\n", nomesJogadores[i], qntMarcados[i]);
 
-        for (int i = 0; i <sorteio.length; i++) {
-            for (int k = 0; k < i; k++ ) {
-                sorteio[i] = random.nextInt(1, 60);
-                if (sorteio[i] == sorteio[k]) {
-                    i--;
-                }else {
-                    for (int j = 0; j < sorteados.length; j++) {
-                        if (sorteio[i] == sorteados[j]) {
-                            i--;
-                        } else {
-                            sorteados[sorteio[i] - 1] = sorteio[i];
-                        }
+            }
+        }
+        System.out.println("----------------------------------------");
+    }
+
+    private static void todosOsSorteados(int[] sorteados) {
+        int qntNumSorteados = 0;
+        System.out.print("Os números sorteados foram: ");
+        Arrays.sort(sorteados);
+        for (int i = 0; i < sorteados.length; i++) {
+            if(sorteados[i] != 0) {
+                System.out.print(sorteados[i] + " ");
+                qntNumSorteados += 1;
+            }
+        }
+        System.out.printf("\nNo total foram sorteados %d números.\n", qntNumSorteados);
+        System.out.println("----------------------------------------");
+
+    }
+
+    private static void marcarCartela(String[] nomesJogadores, int[][] cartelas, int [] sorteados, int[][] marcadas) {
+        for (int i = 0; i < nomesJogadores.length; i++) {
+            for (int j = 0; j < cartelas[i].length; j++) {
+                for (int k = 0; k < sorteados.length; k++) {
+                    if (cartelas[i][j] == sorteados[k]) {
+                        marcadas[i][j] = 1;
                     }
                 }
             }
         }
-        System.out.println(Arrays.toString(sorteio));
-
-
-        System.out.println(Arrays.toString(sorteados));
     }
 
-    private static void novoSorteioManual(int []sorteados) {
+    private static void novoSorteioAutomatico(int []sorteados, String[] nomesJogadores, int[][] cartelas, int[][] marcadas, int qntRodadas) {
         System.out.println("Deseja fazer um novo sorteio?");
         System.out.println("1 - SIM");
         System.out.println("2 - SAIR DO JOGO");
@@ -93,12 +119,51 @@ public class Main {
 
         int opNovoSorteio = scanner.nextInt();
         switch (opNovoSorteio) {
-            case 1 -> sorteioManual(sorteados);
+            case 1 -> sorteioAutomatico(sorteados, nomesJogadores, cartelas, marcadas, qntRodadas);
             case 2 -> System.out.println("Você saiu do jogo!");
             default -> System.out.println("Opção inválida :( Tente novamente");
         }
     }
-    private static void sorteioManual(int [] sorteados) {
+
+    private static void sorteioAutomatico(int[] sorteados, String[] nomesJogadores, int[][] cartelas, int[][] marcadas, int qntRodadas ) {
+        //TODO revisar metodo
+        int[] sorteio = new int[qntSorteados];
+        for (int i = 0; i <sorteio.length; i++) {
+            sorteio[i] = random.nextInt(1, 60);
+            for (int j = 0; j < i; j++) {
+                for (int k = 0; k < sorteados.length; k++) {
+                    if (sorteio[i] == sorteio[j] || sorteio[i] == sorteados[k]) {
+                        i--;
+                    }
+                    break;
+                }
+                break;
+            }
+            sorteados[sorteio[i] - 1] = sorteio[i];
+        }
+        qntRodadas += 1;
+
+        System.out.println("Os números sorteados foram: " + Arrays.toString(sorteio));
+        System.out.println("----------------------------------------");
+        marcarCartela(nomesJogadores, cartelas, sorteados, marcadas);
+        fezBingo(marcadas, nomesJogadores, sorteados, cartelas, qntRodadas);
+        novoSorteioAutomatico(sorteados, nomesJogadores, cartelas, marcadas, qntRodadas);
+    }
+
+    private static void novoSorteioManual(int []sorteados, String[] nomesJogadores, int[][] cartelas, int[][] marcadas, int qntRodadas) {
+        System.out.println("Deseja fazer um novo sorteio?");
+        System.out.println("1 - SIM");
+        System.out.println("2 - SAIR DO JOGO");
+        System.out.println("Digite o número da opção desejada.");
+
+        int opNovoSorteio = scanner.nextInt();
+        switch (opNovoSorteio) {
+            case 1 -> sorteioManual(sorteados, nomesJogadores, cartelas, marcadas, qntRodadas);
+            case 2 -> System.out.println("Você saiu do jogo!");
+            default -> System.out.println("Opção inválida :( Tente novamente");
+        }
+    }
+    private static void sorteioManual(int[] sorteados, String[] nomesJogadores, int[][] cartelas, int[][] marcadas, int qntRodadas) {
         int [] sorteio = new int[qntSorteados];
         System.out.printf("Você deve entrar com os %d números sortedos (entre 0 e 60), separados por vírgula e sem espaço." +
                 "\nExemplo: 20,26,52,40,2" +
@@ -111,9 +176,11 @@ public class Main {
             sorteio[i] = Integer.parseInt(sorteadosManual[i]);
             sorteados[sorteio[i] - 1] = sorteio[i];
         }
+        qntRodadas += 1;
 
-        System.out.println(Arrays.toString(sorteados));
-        novoSorteioManual(sorteados);
+        marcarCartela(nomesJogadores, cartelas, sorteados, marcadas);
+        fezBingo(marcadas, nomesJogadores, sorteados, cartelas,qntRodadas);
+        novoSorteioManual(sorteados, nomesJogadores, cartelas, marcadas, qntRodadas);
     }
 
     private static void mostrarJogadoresECartelas(String[] nomesJogadores, int[][] cartelas) {
